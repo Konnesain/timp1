@@ -49,7 +49,6 @@ function AppRoutes() {
       <Route path="/employees/add" element={<EmployeeForm />} />
       <Route path="/employees/:id" element={<EmployeeDetails />} />
       <Route path="/employees/:id/edit" element={<EmployeeForm />} />
-      <Route path="/buildings/add" element={<BuildingForm />} />
       <Route path="/buildings/:id" element={<BuildingDetails />} />
       <Route path="/buildings/:id/edit" element={<BuildingForm />} />
       <Route path="/logs" element={<LogList />} />

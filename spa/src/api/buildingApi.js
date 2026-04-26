@@ -42,13 +42,6 @@ export const buildingApi = {
   async getById(id) {
     return apiFetch(`${API_BASE_URL}/buildings/${id}`);
   },
-  async create(data) {
-    return apiFetch(`${API_BASE_URL}/buildings`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-  },
   async update(id, data) {
     return apiFetch(`${API_BASE_URL}/buildings/${id}`, {
       method: 'PUT',
