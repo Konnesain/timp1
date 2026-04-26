@@ -68,7 +68,7 @@ function EmployeeDetails() {
       <div className="details-header">
         <h1>Информация о сотруднике</h1>
         <div className="details-actions">
-          <Link to={`/${id}/edit`} className="btn btn-primary">Редактировать</Link>
+          <Link to={`/employees/${id}/edit`} className="btn btn-primary">Редактировать</Link>
           <button onClick={handleDelete} className="btn btn-danger">Удалить</button>
           <Link to="/employees" className="btn">Назад к списку</Link>
         </div>

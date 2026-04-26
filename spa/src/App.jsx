@@ -17,9 +17,9 @@ function AppHeader() {
 
   return (
     <header className="app-header">
-      <Link to="/" className="app-title">Система управления</Link>
+      <Link to="/buildings" className="app-title">Система управления</Link>
       <nav className="app-nav">
-        <Link to="/">Карта</Link>
+        <Link to="/buildings">Карта</Link>
         <Link to="/employees">Сотрудники</Link>
         <Link to="/logs">Журнал событий</Link>
         <Link to="/sensors">Датчики</Link>
@@ -42,12 +42,13 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/login" element={<Navigate to="/" replace />} />
-      <Route path="/" element={<BuildingMap />} />
+      <Route path="/login" element={<Navigate to="/buildings" replace />} />
+      <Route path="/" element={<Navigate to="/buildings" replace />} />
+      <Route path="/buildings" element={<BuildingMap />} />
       <Route path="/employees" element={<EmployeeList />} />
-      <Route path="/add" element={<EmployeeForm />} />
-      <Route path="/:id" element={<EmployeeDetails />} />
-      <Route path="/:id/edit" element={<EmployeeForm />} />
+      <Route path="/employees/add" element={<EmployeeForm />} />
+      <Route path="/employees/:id" element={<EmployeeDetails />} />
+      <Route path="/employees/:id/edit" element={<EmployeeForm />} />
       <Route path="/buildings/add" element={<BuildingForm />} />
       <Route path="/buildings/:id" element={<BuildingDetails />} />
       <Route path="/buildings/:id/edit" element={<BuildingForm />} />

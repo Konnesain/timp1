@@ -48,7 +48,7 @@ function EmployeeList() {
     <div className="employee-list">
       <div className="list-header">
         <h1>Сотрудники</h1>
-        <Link to="/add" className="btn btn-primary">Добавить сотрудника</Link>
+        <Link to="/employees/add" className="btn btn-primary">Добавить сотрудника</Link>
       </div>
 
       {employees.length === 0 ? (
@@ -72,8 +72,8 @@ function EmployeeList() {
                 <td>{emp.position}</td>
                 <td>{emp.buildingName || '—'}</td>
                 <td className="actions">
-                  <Link to={`/${emp.id}`} className="btn btn-small">Просмотр</Link>
-                  <Link to={`/${emp.id}/edit`} className="btn btn-small btn-primary">Редактировать</Link>
+                  <Link to={`/employees/${emp.id}`} className="btn btn-small">Просмотр</Link>
+                  <Link to={`/employees/${emp.id}/edit`} className="btn btn-small btn-primary">Редактировать</Link>
                   <button
                     onClick={() => handleDelete(emp.id, emp.name)}
                     className="btn btn-small btn-danger"
