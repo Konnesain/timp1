@@ -2,6 +2,7 @@ package timp.controller;
 
 import timp.dto.TurnstileResponse;
 import timp.service.TurnstileService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +23,11 @@ public class TurnstileController {
             @PathVariable String action) {
 
         TurnstileResponse response = turnstileService.processAccess(employeeId, buildingId, action);
-        return ResponseEntity.ok(response);
+        
+        if (response.isGranted()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        }
     }
 }
