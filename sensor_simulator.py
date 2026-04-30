@@ -38,6 +38,10 @@ def simulate_temperature(base_temp: float = 22.0, variance: float = 2.0) -> floa
     """Simulate realistic temperature with small fluctuations"""
     return base_temp + random.uniform(-variance, variance)
 
+def simulate_critical_temperature(threshold: float = 50.0) -> float:
+    """Simulate critical temperature above threshold"""
+    return threshold + random.uniform(0.1, 30.0)
+
 def main():
     parser = argparse.ArgumentParser(description="Sensor Simulator")
     parser.add_argument(
@@ -51,6 +55,11 @@ def main():
         default="http://localhost:2001",
         help="Base URL of the server (default: http://localhost:2001)"
     )
+    parser.add_argument(
+        "--critical-only",
+        action="store_true",
+        help="Send only critical temperature values (> 50°C)"
+    )
     args = parser.parse_args()
 
     print("=" * 50)
@@ -58,6 +67,7 @@ def main():
     print("=" * 50)
     print(f"  Server: {args.base_url}")
     print(f"  Interval: {args.interval} seconds")
+    print(f"  Critical only: {'Yes' if args.critical_only else 'No'}")
     print("=" * 50)
 
     sensors = get_sensors(args.base_url)
@@ -81,7 +91,10 @@ def main():
                     value = 1
                     display = "движение"
                 else:
-                    value = simulate_temperature()
+                    if args.critical_only:
+                        value = simulate_critical_temperature()
+                    else:
+                        value = simulate_temperature()
                     display = f"{value:.1f}°C"
                 
                 if send_reading(sensor['id'], value, args.base_url):

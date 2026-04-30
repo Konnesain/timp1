@@ -36,14 +36,6 @@ function EmployeeList() {
     }
   };
 
-  if (loading) {
-    return <div className="loading">Загрузка...</div>;
-  }
-
-  if (error) {
-    return <div className="error">Ошибка: {error}</div>;
-  }
-
   return (
     <div className="employee-list">
       <div className="list-header">
@@ -51,7 +43,11 @@ function EmployeeList() {
         <Link to="/employees/add" className="btn btn-primary">Добавить сотрудника</Link>
       </div>
 
-      {employees.length === 0 ? (
+      {error && <div className="error">Ошибка: {error}</div>}
+
+      {loading && employees.length === 0 ? (
+        <div className="loading">Загрузка...</div>
+      ) : employees.length === 0 ? (
         <p className="empty-message">Сотрудников пока нет</p>
       ) : (
         <table className="table">

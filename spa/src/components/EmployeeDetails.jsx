@@ -49,30 +49,27 @@ function EmployeeDetails() {
     }
   };
 
-  if (loading) {
-    return <div className="loading">Загрузка...</div>;
-  }
-
-  if (error) {
-    return <div className="error">Ошибка: {error}</div>;
-  }
-
-  if (!employee) {
-    return <div className="empty-message">Сотрудник не найден</div>;
-  }
-
-  const accessIds = employee.buildingAccessIds || [];
+  const accessIds = employee?.buildingAccessIds || [];
 
   return (
     <div className="employee-details">
       <div className="details-header">
-        <h1>Информация о сотруднике</h1>
+        <h1>{employee?.name ? `Информация о сотруднике: ${employee.name}` : 'Информация о сотруднике'}</h1>
         <div className="details-actions">
           <Link to={`/employees/${id}/edit`} className="btn btn-primary">Редактировать</Link>
           <button onClick={handleDelete} className="btn btn-danger">Удалить</button>
           <Link to="/employees" className="btn">Назад к списку</Link>
         </div>
       </div>
+
+      {error && <div className="error">Ошибка: {error}</div>}
+
+      {loading ? (
+        <div className="loading">Загрузка...</div>
+      ) : !employee ? (
+        <div className="empty-message">Сотрудник не найден</div>
+      ) : (
+        <>
 
       <div className="details-card">
         <div className="detail-row">
@@ -112,6 +109,8 @@ function EmployeeDetails() {
           </span>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

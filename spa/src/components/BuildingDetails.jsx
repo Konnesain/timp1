@@ -42,19 +42,24 @@ function BuildingDetails() {
     return type;
   };
 
-  if (loading) return <div className="loading">Загрузка...</div>;
-  if (error) return <div className="error">Ошибка: {error}</div>;
-  if (!building) return <div className="empty-message">Здание не найдено</div>;
-
   return (
     <div className="building-details">
       <div className="details-header">
-        <h1>{building.name}</h1>
+        <h1>{building?.name || 'Здание'}</h1>
         <div className="details-actions">
           <Link to={`/buildings/${id}/edit`} className="btn btn-primary">Редактировать</Link>
           <Link to="/" className="btn">Назад к карте</Link>
         </div>
       </div>
+
+      {error && <div className="error">Ошибка: {error}</div>}
+
+      {loading ? (
+        <div className="loading">Загрузка...</div>
+      ) : !building ? (
+        <div className="empty-message">Здание не найдено</div>
+      ) : (
+        <>
 
       <div className="details-card">
         <div className="detail-row">
@@ -154,6 +159,8 @@ function BuildingDetails() {
             ))}
           </tbody>
         </table>
+      )}
+        </>
       )}
     </div>
   );

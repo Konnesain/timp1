@@ -43,14 +43,6 @@ function SensorList() {
     return type;
   };
 
-  if (loading) {
-    return <div className="loading">Загрузка...</div>;
-  }
-
-  if (error) {
-    return <div className="error">Ошибка: {error}</div>;
-  }
-
   return (
     <div className="sensor-list">
       <div className="list-header">
@@ -58,7 +50,11 @@ function SensorList() {
         <button onClick={() => loadSensors(false)} className="btn btn-primary">Обновить</button>
       </div>
 
-      {sensors.length === 0 ? (
+      {error && <div className="error">Ошибка: {error}</div>}
+
+      {loading && sensors.length === 0 ? (
+        <div className="loading">Загрузка...</div>
+      ) : sensors.length === 0 ? (
         <p className="empty-message">Датчиков пока нет</p>
       ) : (
         <table className="table">

@@ -42,13 +42,16 @@ function ReportPage() {
     }
   };
 
-  if (loading) return <div className="loading">Загрузка...</div>;
-
   return (
     <div className="report-page">
       <h1>Генерация отчёта о безопасности</h1>
 
       {error && <div className="error">{error}</div>}
+
+      {loading ? (
+        <div className="loading">Загрузка...</div>
+      ) : (
+        <>
 
       <div className="form-group">
         <label htmlFor="building-select">Выберите здание:</label>
@@ -79,6 +82,8 @@ function ReportPage() {
           Назад
         </button>
       </div>
+        </>
+      )}
     </div>
   );
 }

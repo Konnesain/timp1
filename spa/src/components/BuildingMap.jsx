@@ -66,9 +66,6 @@ function BuildingMap() {
     return 'Нет датчиков';
   };
 
-  if (loading) return <div className="loading">Загрузка карты...</div>;
-  if (error) return <div className="error">Ошибка: {error}</div>;
-
   const svgWidth = 700;
   const svgHeight = 400;
 
@@ -95,7 +92,12 @@ function BuildingMap() {
         </div>
       </div>
 
-      <div className="map-container">
+      {error && <div className="error">Ошибка: {error}</div>}
+
+      {loading && buildings.length === 0 ? (
+        <div className="loading">Загрузка карты...</div>
+      ) : (
+        <div className="map-container">
         <svg
           className="map-svg"
           width={svgWidth}
@@ -185,6 +187,7 @@ function BuildingMap() {
           </div>
         )}
       </div>
+      )}
 
       <div className="map-legend">
         <h4>Легенда</h4>

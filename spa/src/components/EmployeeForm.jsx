@@ -79,17 +79,16 @@ function EmployeeForm() {
     }
   };
 
-  if (loading && isEdit) {
-    return <div className="loading">Загрузка...</div>;
-  }
-
   return (
     <div className="employee-form">
       <h1>{isEdit ? 'Редактировать сотрудника' : 'Новый сотрудник'}</h1>
 
       {error && <div className="error">{error}</div>}
 
-      <form onSubmit={handleSubmit}>
+      {loading && isEdit ? (
+        <div className="loading">Загрузка...</div>
+      ) : (
+        <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="name">Имя:</label>
           <input
@@ -143,6 +142,7 @@ function EmployeeForm() {
           </button>
         </div>
       </form>
+      )}
     </div>
   );
 }

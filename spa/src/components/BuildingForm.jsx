@@ -56,13 +56,14 @@ function BuildingForm() {
     }
   };
 
-  if (loading && isEdit) return <div className="loading">Загрузка...</div>;
-
   return (
     <div className="employee-form">
       <h1>{isEdit ? 'Редактировать здание' : 'Новое здание'}</h1>
       {error && <div className="error">{error}</div>}
-      <form onSubmit={handleSubmit}>
+      {loading && isEdit ? (
+        <div className="loading">Загрузка...</div>
+      ) : (
+        <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="name">Название:</label>
           <input
@@ -93,6 +94,7 @@ function BuildingForm() {
           <button type="button" onClick={() => navigate('/')} className="btn">Отмена</button>
         </div>
       </form>
+      )}
     </div>
   );
 }
