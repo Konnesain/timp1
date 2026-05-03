@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
+import NotificationToast from './components/NotificationToast';
 import EmployeeList from './components/EmployeeList';
 import EmployeeForm from './components/EmployeeForm';
 import EmployeeDetails from './components/EmployeeDetails';
@@ -62,12 +64,15 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <div className="app">
-          <AppHeader />
-          <main className="app-content">
-            <AppRoutes />
-          </main>
-        </div>
+        <NotificationProvider>
+          <div className="app">
+            <AppHeader />
+            <main className="app-content">
+              <AppRoutes />
+            </main>
+            <NotificationToast />
+          </div>
+        </NotificationProvider>
       </BrowserRouter>
     </AuthProvider>
   );

@@ -96,19 +96,17 @@ public class DataInitializer {
                 Building b2 = buildingRepository.findById(2L).orElseThrow();
 
                 // Temperature sensors
-                Sensor temp1 = new Sensor(b1, "Датчик температуры #1");
+                Sensor temp1 = new Sensor(b1, "Датчик температуры #1", SensorType.TEMPERATURE);
                 sensorRepository.save(temp1);
 
-                Sensor temp2 = new Sensor(b2, "Датчик температуры #2");
+                Sensor temp2 = new Sensor(b2, "Датчик температуры #2", SensorType.TEMPERATURE);
                 sensorRepository.save(temp2);
 
                 // Cameras
-                Sensor cam1 = new Sensor(b1, "Камера #1");
-                cam1.setType(SensorType.CAMERA);
+                Sensor cam1 = new Sensor(b1, "Камера #1", SensorType.CAMERA);
                 sensorRepository.save(cam1);
 
-                Sensor cam2 = new Sensor(b2, "Камера #2");
-                cam2.setType(SensorType.CAMERA);
+                Sensor cam2 = new Sensor(b2, "Камера #2", SensorType.CAMERA);
                 sensorRepository.save(cam2);
 
                 System.out.println(">>> Created 4 default sensors (2 temperature + 2 cameras)");

@@ -28,17 +28,20 @@ public class BuildingService {
     private final EmployeeRepository employeeRepository;
     private final EmployeeBuildingAccessRepository accessRepository;
     private final SensorRepository sensorRepository;
+    private final SensorService sensorService;
     private final SecurityEventLogger eventLogger;
 
     public BuildingService(BuildingRepository buildingRepository,
                            EmployeeRepository employeeRepository,
                            EmployeeBuildingAccessRepository accessRepository,
                            SensorRepository sensorRepository,
+                           SensorService sensorService,
                            SecurityEventLogger eventLogger) {
         this.buildingRepository = buildingRepository;
         this.employeeRepository = employeeRepository;
         this.accessRepository = accessRepository;
         this.sensorRepository = sensorRepository;
+        this.sensorService = sensorService;
         this.eventLogger = eventLogger;
     }
 
@@ -109,6 +112,10 @@ public class BuildingService {
     private BuildingResponse.SensorStatus calculateSensorStatus(List<Sensor> sensors) {
         if (sensors.isEmpty()) {
             return BuildingResponse.SensorStatus.NO_SENSORS;
+        }
+
+        if (sensorService.hasCriticalSensors(sensors)) {
+            return BuildingResponse.SensorStatus.CRITICAL;
         }
 
         boolean hasOffline = sensors.stream().anyMatch(s -> !s.isOnline());

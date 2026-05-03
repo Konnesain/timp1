@@ -15,10 +15,14 @@ import java.util.stream.Collectors;
 @Service
 public class SensorService {
 
-    private final SensorRepository sensorRepository;
+    private static final double CRITICAL_TEMPERATURE = 50.0;
 
-    public SensorService(SensorRepository sensorRepository) {
+    private final SensorRepository sensorRepository;
+    private final NotificationService notificationService;
+
+    public SensorService(SensorRepository sensorRepository, NotificationService notificationService) {
         this.sensorRepository = sensorRepository;
+        this.notificationService = notificationService;
     }
 
     public List<SensorResponse> getAllSensors() {
@@ -38,10 +42,21 @@ public class SensorService {
                 .map(SensorResponse::fromEntity);
     }
 
+    private boolean isCritical(Sensor sensor) {
+        return sensor.getType() == Sensor.SensorType.TEMPERATURE
+                && sensor.getValue() != null
+                && sensor.getValue() > CRITICAL_TEMPERATURE;
+    }
+
+    public boolean hasCriticalSensors(List<Sensor> sensors) {
+        return sensors.stream()
+                .anyMatch(this::isCritical);
+    }
+
     @Transactional
     public Optional<SensorResponse> receiveReading(Long sensorId, SensorValueRequest request) {
         Optional<Sensor> sensorOpt = sensorRepository.findById(sensorId);
-        
+
         if (sensorOpt.isEmpty()) {
             return Optional.empty();
         }
@@ -50,6 +65,15 @@ public class SensorService {
         sensor.setValue(request.getValue());
         sensor.setLastSeen(LocalDateTime.now());
         Sensor saved = sensorRepository.save(sensor);
+
+        if (isCritical(sensor)) {
+            String sensorInfo = sensor.getName() + ": " + sensor.getValue() + "°C";
+            notificationService.sendCriticalAlert(
+                    sensor.getBuilding().getId(),
+                    sensor.getBuilding().getName(),
+                    sensorInfo
+            );
+        }
 
         return Optional.of(SensorResponse.fromEntity(saved));
     }

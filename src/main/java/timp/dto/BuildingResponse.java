@@ -5,6 +5,7 @@ public class BuildingResponse {
     public enum SensorStatus {
         OK("В норме"),
         WARNING("Требует проверки"),
+        CRITICAL("Критическое состояние"),
         NO_SENSORS("Нет датчиков");
 
         private final String label;

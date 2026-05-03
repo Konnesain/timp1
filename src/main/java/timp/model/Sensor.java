@@ -35,11 +35,15 @@ public class Sensor {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private SensorType type = SensorType.TEMPERATURE;
+    private SensorType type;
 
     public Sensor() { }
 
-    public Sensor(Building building, String name) { this.building = building; this.name = name; }
+    public Sensor(Building building, String name, SensorType type) {
+        this.building = building;
+        this.name = name;
+        this.type = type;
+    }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

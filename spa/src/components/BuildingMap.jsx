@@ -38,6 +38,7 @@ function BuildingMap() {
     const status = building.sensorStatus;
     if (status === 'OK') return '#4caf50';
     if (status === 'WARNING') return '#ffc107';
+    if (status === 'CRITICAL') return '#f44336';
     return '#90a4ae';
   };
 
@@ -46,6 +47,7 @@ function BuildingMap() {
     const status = building.sensorStatus;
     if (status === 'OK') return '#388e3c';
     if (status === 'WARNING') return '#f57c00';
+    if (status === 'CRITICAL') return '#d32f2f';
     return '#607d8b';
   };
 
@@ -55,7 +57,10 @@ function BuildingMap() {
       return building.name.toLowerCase().includes(searchName.toLowerCase());
     }
     if (filter === 'warning') {
-      return building.sensorStatus === 'WARNING';
+      return building.sensorStatus === 'WARNING' || building.sensorStatus === 'CRITICAL';
+    }
+    if (filter === 'critical') {
+      return building.sensorStatus === 'CRITICAL';
     }
     return true;
   }, [filter, searchName]);
@@ -63,6 +68,7 @@ function BuildingMap() {
   const getStatusBadge = (status) => {
     if (status === 'OK') return 'В норме';
     if (status === 'WARNING') return 'Требует проверки';
+    if (status === 'CRITICAL') return 'Критическое состояние';
     return 'Нет датчиков';
   };
 
@@ -77,6 +83,7 @@ function BuildingMap() {
           <select value={filter} onChange={(e) => setFilter(e.target.value)}>
             <option value="all">Все здания</option>
             <option value="warning">Требуют проверки</option>
+            <option value="critical">Критические</option>
             <option value="byName">По имени</option>
           </select>
           {filter === 'byName' && (
@@ -198,6 +205,10 @@ function BuildingMap() {
         <div className="legend-item">
           <span className="legend-color" style={{ background: '#ffc107' }}></span>
           <span>Требует проверки</span>
+        </div>
+        <div className="legend-item">
+          <span className="legend-color" style={{ background: '#f44336' }}></span>
+          <span>Критическое состояние</span>
         </div>
         <div className="legend-item">
           <span className="legend-color" style={{ background: '#90a4ae' }}></span>
