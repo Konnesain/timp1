@@ -1,0 +1,3 @@
+# Mail credentials
+spring.mail.username=example@gmail.com
+spring.mail.password=abcdabcdabcdabcd

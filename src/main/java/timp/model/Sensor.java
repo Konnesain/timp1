@@ -8,8 +8,7 @@ import java.time.LocalDateTime;
 public class Sensor {
 
     public enum SensorType {
-        TEMPERATURE("Температура"),
-        CAMERA("Камера");
+        TEMPERATURE("Температура");
 
         private final String label;
         SensorType(String label) { this.label = label; }

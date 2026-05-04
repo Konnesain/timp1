@@ -32,14 +32,11 @@ function SensorList() {
   };
 
   const formatValue = (sensor) => {
-    if (sensor.type === 'Камера') return '—';
     if (sensor.value !== null) return `${sensor.value}°C`;
     return '—';
   };
 
   const getTypeLabel = (type) => {
-    if (type === 'Температура') return 'Температура';
-    if (type === 'Камера') return 'Камера';
     return type;
   };
 

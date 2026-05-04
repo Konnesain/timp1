@@ -1,7 +1,5 @@
 package timp.dto;
 
-import java.util.List;
-
 public class NotificationDto {
 
     private String type;

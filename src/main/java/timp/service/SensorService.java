@@ -19,12 +19,10 @@ public class SensorService {
 
     private final SensorRepository sensorRepository;
     private final NotificationService notificationService;
-    private final SensorSimulator sensorSimulator;
 
-    public SensorService(SensorRepository sensorRepository, NotificationService notificationService, SensorSimulator sensorSimulator) {
+    public SensorService(SensorRepository sensorRepository, NotificationService notificationService) {
         this.sensorRepository = sensorRepository;
         this.notificationService = notificationService;
-        this.sensorSimulator = sensorSimulator;
     }
 
     public List<SensorResponse> getAllSensors() {
@@ -44,25 +42,17 @@ public class SensorService {
                 .map(SensorResponse::fromEntity);
     }
 
-    public void setCriticalModeForBuilding(List<Sensor> sensors) {
-        sensorSimulator.setCriticalModeForBuilding(sensors);
-    }
-
-    public void removeCriticalModeForBuilding(List<Sensor> sensors) {
-        sensorSimulator.removeCriticalModeForBuilding(sensors);
-    }
-
     public boolean hasCriticalSensors(List<Sensor> sensors) {
         return sensors.stream()
                 .anyMatch(s -> s.getValue() != null && s.getValue() > CRITICAL_TEMPERATURE);
     }
 
     @Transactional
-    public Optional<SensorResponse> receiveReading(Long sensorId, SensorValueRequest request) {
+    public void receiveReading(Long sensorId, SensorValueRequest request) {
         Optional<Sensor> sensorOpt = sensorRepository.findById(sensorId);
 
         if (sensorOpt.isEmpty()) {
-            return Optional.empty();
+            return;
         }
 
         Sensor sensor = sensorOpt.get();
@@ -71,14 +61,12 @@ public class SensorService {
         Sensor saved = sensorRepository.save(sensor);
 
         if (saved.getValue() != null && saved.getValue() > CRITICAL_TEMPERATURE) {
-            String sensorInfo = sensor.getName() + ": " + sensor.getValue() + "°C";
-            notificationService.sendCriticalAlert(
-                    sensor.getBuilding().getId(),
-                    sensor.getBuilding().getName(),
-                    sensorInfo
-            );
+            String sensorInfo = sensor.getName() + ": " + String.format("%.1f°C", sensor.getValue());
+            notificationService.sendCriticalAlert(sensor.getBuilding().getId(), sensor.getBuilding().getName(), sensorInfo);
         }
 
-        return Optional.of(SensorResponse.fromEntity(saved));
+        List<Sensor> buildingSensors = sensorRepository.findByBuildingId(sensor.getBuilding().getId());
+        boolean isCritical = hasCriticalSensors(buildingSensors);
+        notificationService.resetAlertIfResolved(sensor.getBuilding().getId(), isCritical);
     }
 }

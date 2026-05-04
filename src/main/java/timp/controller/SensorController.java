@@ -2,9 +2,10 @@ package timp.controller;
 
 import timp.dto.SensorValueRequest;
 import timp.dto.SensorResponse;
-import timp.model.Sensor;
+import timp.model.Sensor.SensorType;
 import timp.repository.SensorRepository;
 import timp.service.SensorService;
+import timp.service.SensorSimulator;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,10 +18,12 @@ public class SensorController {
 
     private final SensorService sensorService;
     private final SensorRepository sensorRepository;
+    private final SensorSimulator sensorSimulator;
 
-    public SensorController(SensorService sensorService, SensorRepository sensorRepository) {
+    public SensorController(SensorService sensorService, SensorRepository sensorRepository, SensorSimulator sensorSimulator) {
         this.sensorService = sensorService;
         this.sensorRepository = sensorRepository;
+        this.sensorSimulator = sensorSimulator;
     }
 
     @GetMapping
@@ -37,30 +40,27 @@ public class SensorController {
     public ResponseEntity<SensorResponse> receiveReading(
             @PathVariable Long id,
             @Valid @RequestBody SensorValueRequest request) {
-        
-        return sensorService.receiveReading(id, request)
+
+        sensorService.receiveReading(id, request);
+        return sensorService.getSensorById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/ignite/{buildingId}")
     public ResponseEntity<List<SensorResponse>> igniteBuilding(@PathVariable Long buildingId) {
-        List<Sensor> sensors = sensorRepository.findByBuildingId(buildingId).stream()
-                .filter(s -> s.getType() == Sensor.SensorType.TEMPERATURE)
-                .toList();
-        sensorService.setCriticalModeForBuilding(sensors);
-        return ResponseEntity.ok(sensors.stream()
+        sensorSimulator.igniteBuilding(buildingId);
+        return ResponseEntity.ok(sensorRepository.findByBuildingId(buildingId).stream()
+                .filter(s -> s.getType() == SensorType.TEMPERATURE)
                 .map(SensorResponse::fromEntity)
                 .toList());
     }
 
     @PostMapping("/extinguish/{buildingId}")
     public ResponseEntity<List<SensorResponse>> extinguishBuilding(@PathVariable Long buildingId) {
-        List<Sensor> sensors = sensorRepository.findByBuildingId(buildingId).stream()
-                .filter(s -> s.getType() == Sensor.SensorType.TEMPERATURE)
-                .toList();
-        sensorService.removeCriticalModeForBuilding(sensors);
-        return ResponseEntity.ok(sensors.stream()
+        sensorSimulator.extinguishBuilding(buildingId);
+        return ResponseEntity.ok(sensorRepository.findByBuildingId(buildingId).stream()
+                .filter(s -> s.getType() == SensorType.TEMPERATURE)
                 .map(SensorResponse::fromEntity)
                 .toList());
     }
