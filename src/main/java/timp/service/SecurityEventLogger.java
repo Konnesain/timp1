@@ -3,6 +3,9 @@ package timp.service;
 import timp.model.SecurityEvent;
 import timp.repository.SecurityEventRepository;
 import timp.util.SecurityUtil;
+import org.springframework.context.event.EventListener;
+import org.springframework.security.authentication.event.AuthenticationFailureBadCredentialsEvent;
+import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -42,12 +45,32 @@ public class SecurityEventLogger {
         securityEventRepository.save(event);
     }
 
+    @EventListener
+    public void onAuthenticationSuccess(AuthenticationSuccessEvent event) {
+        String username = event.getAuthentication().getName();
+        log(SecurityEvent.EventType.AUTH_LOGIN, "Успешный вход: " + username, true, 0, username);
+    }
+
+    @EventListener
+    public void onAuthenticationFailure(AuthenticationFailureBadCredentialsEvent event) {
+        String username = event.getAuthentication().getName();
+        log(SecurityEvent.EventType.AUTH_FAILED, "Неверный логин или пароль: " + username, false, 0, username);
+    }
+
     public void logBuildingView(String buildingName) {
         log(SecurityEvent.EventType.BUILDING_VIEW, "Просмотр здания: " + buildingName, true);
     }
 
     public void logBuildingEdit(String buildingName) {
         log(SecurityEvent.EventType.BUILDING_EDIT, "Редактирование здания: " + buildingName, true);
+    }
+
+    public void logBuildingCreate(String buildingName) {
+        log(SecurityEvent.EventType.BUILDING_CREATE, "Создание здания: " + buildingName, true);
+    }
+
+    public void logBuildingDelete(String buildingName) {
+        log(SecurityEvent.EventType.BUILDING_DELETE, "Удаление здания: " + buildingName, true);
     }
     
     public void logEmployeeRequest() {
@@ -81,13 +104,5 @@ public class SecurityEventLogger {
 
     public void logAccessAttemptUnknown(String details, boolean success) {
         log(SecurityEvent.EventType.ACCESS_ATTEMPT, details, success, 0, "Неизвестный");
-    }
-
-    public void logAuthLogin(String username) {
-        log(SecurityEvent.EventType.AUTH_LOGIN, "Успешный вход: " + username, true, 0, username);
-    }
-
-    public void logAuthFailed(String username) {
-        log(SecurityEvent.EventType.AUTH_FAILED, "Неверный логин или пароль: " + username, false, 0, username);
     }
 }

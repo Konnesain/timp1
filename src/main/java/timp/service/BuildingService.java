@@ -88,9 +88,38 @@ public class BuildingService {
         String oldName = building.getName();
         building.setName(request.getName());
         building.setDescription(request.getDescription());
+        building.setPositionX(request.getPositionX());
+        building.setPositionY(request.getPositionY());
+        building.setWidth(request.getWidth());
+        building.setHeight(request.getHeight());
         Building saved = buildingRepository.save(building);
         eventLogger.logBuildingEdit(oldName);
         return toResponse(saved);
+    }
+
+    public BuildingResponse createBuilding(BuildingRequest request) {
+        Building building = new Building();
+        building.setName(request.getName());
+        building.setDescription(request.getDescription());
+        building.setPositionX(request.getPositionX());
+        building.setPositionY(request.getPositionY());
+        building.setWidth(request.getWidth());
+        building.setHeight(request.getHeight());
+        Building saved = buildingRepository.save(building);
+        eventLogger.logBuildingCreate(building.getName());
+        return toResponse(saved);
+    }
+
+    public void deleteBuilding(Long id) {
+        if (!buildingRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Здание не найдено: " + id);
+        }
+        Building building = buildingRepository.findById(id).orElse(null);
+        String buildingName = building != null ? building.getName() : "ID: " + id;
+        sensorRepository.deleteByBuildingId(id);
+        accessRepository.deleteByBuildingId(id);
+        buildingRepository.deleteById(id);
+        eventLogger.logBuildingDelete(buildingName);
     }
 
     private BuildingResponse toResponse(Building building) {

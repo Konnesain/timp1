@@ -33,7 +33,7 @@ function SensorList() {
 
   const formatValue = (sensor) => {
     if (sensor.type === 'Камера') return '—';
-    if (sensor.online && sensor.value !== null) return `${sensor.value}°C`;
+    if (sensor.value !== null) return `${sensor.value}°C`;
     return '—';
   };
 

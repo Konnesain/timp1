@@ -13,6 +13,8 @@ public class SecurityEvent {
         EMPLOYEE_REQUEST("Запрос списка сотрудников"),
         BUILDING_VIEW("Просмотр здания"),
         BUILDING_EDIT("Редактирование здания"),
+        BUILDING_CREATE("Создание здания"),
+        BUILDING_DELETE("Удаление здания"),
         EMPLOYEE_CREATE("Создание сотрудника"),
         EMPLOYEE_DELETE("Удаление сотрудника"),
         AUTH_LOGIN("Вход в систему"),

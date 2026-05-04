@@ -30,6 +30,16 @@ function BuildingDetails() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!confirm(`Удалить здание "${building.name}"?`)) return;
+    try {
+      await buildingApi.delete(id);
+      window.location.href = '/buildings';
+    } catch (err) {
+      alert('Ошибка при удалении: ' + err.message);
+    }
+  };
+
   const formatValue = (sensor) => {
     if (sensor.type === 'Камера') return '—';
     if (sensor.value !== null) return `${sensor.value}°C`;
@@ -48,7 +58,8 @@ function BuildingDetails() {
         <h1>{building?.name || 'Здание'}</h1>
         <div className="details-actions">
           <Link to={`/buildings/${id}/edit`} className="btn btn-primary">Редактировать</Link>
-          <Link to="/" className="btn">Назад к карте</Link>
+          <button onClick={handleDelete} className="btn btn-danger">Удалить</button>
+          <Link to="/buildings" className="btn">Назад к карте</Link>
         </div>
       </div>
 

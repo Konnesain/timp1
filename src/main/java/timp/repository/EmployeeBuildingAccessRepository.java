@@ -17,6 +17,6 @@ public interface EmployeeBuildingAccessRepository extends JpaRepository<Employee
     List<EmployeeBuildingAccess> findByBuildingId(Long buildingId);
 
     void deleteByEmployeeId(Long employeeId);
-
+    void deleteByBuildingId(Long buildingId);
     boolean existsByEmployeeIdAndBuildingId(Long employeeId, Long buildingId);
 }

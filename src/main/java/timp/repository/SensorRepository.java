@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface SensorRepository extends JpaRepository<Sensor, Long> {
     List<Sensor> findByBuildingId(Long buildingId);
+    void deleteByBuildingId(Long buildingId);
 }

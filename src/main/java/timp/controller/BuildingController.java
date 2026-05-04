@@ -35,4 +35,16 @@ public class BuildingController {
                                                             @Valid @RequestBody BuildingRequest request) {
         return ResponseEntity.ok(buildingService.updateBuilding(id, request));
     }
+
+    @PostMapping
+    public ResponseEntity<BuildingResponse> createBuilding(@Valid @RequestBody BuildingRequest request) {
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED)
+                .body(buildingService.createBuilding(request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteBuilding(@PathVariable Long id) {
+        buildingService.deleteBuilding(id);
+        return ResponseEntity.noContent().build();
+    }
 }

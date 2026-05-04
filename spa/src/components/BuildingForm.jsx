@@ -10,6 +10,10 @@ function BuildingForm() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
+    positionX: 0,
+    positionY: 0,
+    width: 100,
+    height: 100,
   });
 
   const [loading, setLoading] = useState(false);
@@ -28,6 +32,10 @@ function BuildingForm() {
       setFormData({
         name: data.name || '',
         description: data.description || '',
+        positionX: data.positionX ?? 0,
+        positionY: data.positionY ?? 0,
+        width: data.width ?? 100,
+        height: data.height ?? 100,
       });
     } catch (err) {
       setError(err.message);
@@ -37,8 +45,11 @@ function BuildingForm() {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'number' ? (value === '' ? '' : Number(value)) : value,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -87,6 +98,60 @@ function BuildingForm() {
             rows={3}
             placeholder="Краткое описание здания"
           />
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="positionX">Позиция X:</label>
+            <input
+              type="number"
+              id="positionX"
+              name="positionX"
+              value={formData.positionX}
+              onChange={handleChange}
+              placeholder="0"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="positionY">Позиция Y:</label>
+            <input
+              type="number"
+              id="positionY"
+              name="positionY"
+              value={formData.positionY}
+              onChange={handleChange}
+              placeholder="0"
+            />
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="width">Ширина:</label>
+            <input
+              type="number"
+              id="width"
+              name="width"
+              value={formData.width}
+              onChange={handleChange}
+              min="10"
+              placeholder="100"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="height">Высота:</label>
+            <input
+              type="number"
+              id="height"
+              name="height"
+              value={formData.height}
+              onChange={handleChange}
+              min="10"
+              placeholder="100"
+            />
+          </div>
         </div>
 
         <div className="form-actions">

@@ -35,7 +35,6 @@ export function NotificationProvider({ children }) {
           };
           setNotifications(prev => [...prev, notification]);
 
-          // Auto-dismiss after 30 seconds
           setTimeout(() => {
             dismissNotification(notification.id);
           }, 30000);
@@ -46,12 +45,10 @@ export function NotificationProvider({ children }) {
 
       eventSource.onerror = (error) => {
         eventSource.close();
-        // If 401 Unauthorized, don't reconnect
         if (eventSource.readyState === EventSource.CLOSED) {
           console.log('SSE connection closed');
           return;
         }
-        // Reconnect after 5 seconds on other errors
         reconnectTimeout = setTimeout(connect, 5000);
       };
     };

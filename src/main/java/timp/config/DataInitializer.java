@@ -38,7 +38,7 @@ public class DataInitializer {
             }
 
             // Default buildings (only if empty)
-            if (buildingRepository.count() == 0) {
+            /*if (buildingRepository.count() == 0) {
                 Building b1 = new Building("Главный корпус");
                 b1.setPositionX(50);
                 b1.setPositionY(80);
@@ -110,7 +110,7 @@ public class DataInitializer {
                 sensorRepository.save(cam2);
 
                 System.out.println(">>> Created 4 default sensors (2 temperature + 2 cameras)");
-            }
+            }*/
         };
     }
 }

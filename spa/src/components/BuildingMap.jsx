@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { buildingApi } from '../api/buildingApi';
 
 function BuildingMap() {
@@ -9,7 +9,11 @@ function BuildingMap() {
   const [filter, setFilter] = useState('all');
   const [searchName, setSearchName] = useState('');
   const [hoveredBuilding, setHoveredBuilding] = useState(null);
+  const [contextMenu, setContextMenu] = useState(null);
   const navigate = useNavigate();
+
+  const svgWidth = 700;
+  const svgHeight = 400;
 
   useEffect(() => {
     loadBuildings(true);
@@ -34,6 +38,31 @@ function BuildingMap() {
     navigate(`/buildings/${building.id}`);
   };
 
+  const handleContextMenu = (e, building) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({ x: e.clientX, y: e.clientY, building });
+  };
+
+  const handleDeleteBuilding = async () => {
+    if (!contextMenu) return;
+    const building = contextMenu.building;
+    if (!confirm(`Удалить здание "${building.name}"?`)) return;
+    try {
+      await buildingApi.delete(building.id);
+      setBuildings(buildings.filter(b => b.id !== building.id));
+    } catch (err) {
+      alert('Ошибка при удалении: ' + err.message);
+    }
+    setContextMenu(null);
+  };
+
+  useEffect(() => {
+    const closeMenu = () => setContextMenu(null);
+    window.addEventListener('click', closeMenu);
+    return () => window.removeEventListener('click', closeMenu);
+  }, []);
+
   const getStatusColor = (building) => {
     const status = building.sensorStatus;
     if (status === 'OK') return '#4caf50';
@@ -51,7 +80,7 @@ function BuildingMap() {
     return '#607d8b';
   };
 
-  const isBuildingVisible = useCallback((building) => {
+  const isBuildingVisible = (building) => {
     if (filter === 'all') return true;
     if (filter === 'byName' && searchName) {
       return building.name.toLowerCase().includes(searchName.toLowerCase());
@@ -63,7 +92,7 @@ function BuildingMap() {
       return building.sensorStatus === 'CRITICAL';
     }
     return true;
-  }, [filter, searchName]);
+  };
 
   const getStatusBadge = (status) => {
     if (status === 'OK') return 'В норме';
@@ -71,9 +100,6 @@ function BuildingMap() {
     if (status === 'CRITICAL') return 'Критическое состояние';
     return 'Нет датчиков';
   };
-
-  const svgWidth = 700;
-  const svgHeight = 400;
 
   return (
     <div className="building-map-page">
@@ -95,6 +121,7 @@ function BuildingMap() {
               className="map-search"
             />
           )}
+          <Link to="/buildings/add" className="btn btn-primary">Добавить здание</Link>
           <button onClick={() => loadBuildings(false)} className="btn btn-primary">Обновить</button>
         </div>
       </div>
@@ -131,6 +158,7 @@ function BuildingMap() {
                 onClick={() => handleBuildingClick(building)}
                 onMouseEnter={() => setHoveredBuilding(building)}
                 onMouseLeave={() => setHoveredBuilding(null)}
+                onContextMenu={(e) => handleContextMenu(e, building)}
                 style={{ cursor: 'pointer' }}
               >
                 <rect
@@ -194,6 +222,21 @@ function BuildingMap() {
           </div>
         )}
       </div>
+      )}
+
+      {contextMenu && (
+        <div
+          className="context-menu"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button className="context-menu-item" onClick={() => navigate(`/buildings/${contextMenu.building.id}/edit`)}>
+            Редактировать
+          </button>
+          <button className="context-menu-item context-menu-danger" onClick={handleDeleteBuilding}>
+            Удалить
+          </button>
+        </div>
       )}
 
       <div className="map-legend">
