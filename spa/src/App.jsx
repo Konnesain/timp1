@@ -12,6 +12,7 @@ import LogList from './components/LogList';
 import Login from './components/Login';
 import SensorList from './components/SensorList';
 import ReportPage from './components/ReportPage';
+import RoadForm from './components/RoadForm';
 
 function AppHeader() {
   const { user, logout } = useAuth();
@@ -54,6 +55,7 @@ function AppRoutes() {
       <Route path="/buildings/:id" element={<BuildingDetails />} />
       <Route path="/buildings/add" element={<BuildingForm />} />
       <Route path="/buildings/:id/edit" element={<BuildingForm />} />
+      <Route path="/roads/:id/edit" element={<RoadForm />} />
       <Route path="/logs" element={<LogList />} />
       <Route path="/sensors" element={<SensorList />} />
       <Route path="/report" element={<ReportPage />} />
