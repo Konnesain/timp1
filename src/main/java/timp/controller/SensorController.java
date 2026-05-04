@@ -2,6 +2,8 @@ package timp.controller;
 
 import timp.dto.SensorValueRequest;
 import timp.dto.SensorResponse;
+import timp.model.Sensor;
+import timp.repository.SensorRepository;
 import timp.service.SensorService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +16,11 @@ import java.util.List;
 public class SensorController {
 
     private final SensorService sensorService;
+    private final SensorRepository sensorRepository;
 
-    public SensorController(SensorService sensorService) {
+    public SensorController(SensorService sensorService, SensorRepository sensorRepository) {
         this.sensorService = sensorService;
+        this.sensorRepository = sensorRepository;
     }
 
     @GetMapping
@@ -37,5 +41,27 @@ public class SensorController {
         return sensorService.receiveReading(id, request)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/ignite/{buildingId}")
+    public ResponseEntity<List<SensorResponse>> igniteBuilding(@PathVariable Long buildingId) {
+        List<Sensor> sensors = sensorRepository.findByBuildingId(buildingId).stream()
+                .filter(s -> s.getType() == Sensor.SensorType.TEMPERATURE)
+                .toList();
+        sensorService.setCriticalModeForBuilding(sensors);
+        return ResponseEntity.ok(sensors.stream()
+                .map(SensorResponse::fromEntity)
+                .toList());
+    }
+
+    @PostMapping("/extinguish/{buildingId}")
+    public ResponseEntity<List<SensorResponse>> extinguishBuilding(@PathVariable Long buildingId) {
+        List<Sensor> sensors = sensorRepository.findByBuildingId(buildingId).stream()
+                .filter(s -> s.getType() == Sensor.SensorType.TEMPERATURE)
+                .toList();
+        sensorService.removeCriticalModeForBuilding(sensors);
+        return ResponseEntity.ok(sensors.stream()
+                .map(SensorResponse::fromEntity)
+                .toList());
     }
 }

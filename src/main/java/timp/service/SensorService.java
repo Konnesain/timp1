@@ -19,10 +19,12 @@ public class SensorService {
 
     private final SensorRepository sensorRepository;
     private final NotificationService notificationService;
+    private final SensorSimulator sensorSimulator;
 
-    public SensorService(SensorRepository sensorRepository, NotificationService notificationService) {
+    public SensorService(SensorRepository sensorRepository, NotificationService notificationService, SensorSimulator sensorSimulator) {
         this.sensorRepository = sensorRepository;
         this.notificationService = notificationService;
+        this.sensorSimulator = sensorSimulator;
     }
 
     public List<SensorResponse> getAllSensors() {
@@ -42,15 +44,17 @@ public class SensorService {
                 .map(SensorResponse::fromEntity);
     }
 
-    private boolean isCritical(Sensor sensor) {
-        return sensor.getType() == Sensor.SensorType.TEMPERATURE
-                && sensor.getValue() != null
-                && sensor.getValue() > CRITICAL_TEMPERATURE;
+    public void setCriticalModeForBuilding(List<Sensor> sensors) {
+        sensorSimulator.setCriticalModeForBuilding(sensors);
+    }
+
+    public void removeCriticalModeForBuilding(List<Sensor> sensors) {
+        sensorSimulator.removeCriticalModeForBuilding(sensors);
     }
 
     public boolean hasCriticalSensors(List<Sensor> sensors) {
         return sensors.stream()
-                .anyMatch(this::isCritical);
+                .anyMatch(s -> s.getValue() != null && s.getValue() > CRITICAL_TEMPERATURE);
     }
 
     @Transactional
@@ -66,7 +70,7 @@ public class SensorService {
         sensor.setLastSeen(LocalDateTime.now());
         Sensor saved = sensorRepository.save(sensor);
 
-        if (isCritical(sensor)) {
+        if (saved.getValue() != null && saved.getValue() > CRITICAL_TEMPERATURE) {
             String sensorInfo = sensor.getName() + ": " + sensor.getValue() + "°C";
             notificationService.sendCriticalAlert(
                     sensor.getBuilding().getId(),

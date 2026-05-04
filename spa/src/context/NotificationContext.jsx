@@ -15,6 +15,13 @@ export function NotificationProvider({ children }) {
     setNotifications(prev => prev.filter(n => n.id !== id));
   }, []);
 
+  const addNotification = useCallback((notification) => {
+    const n = { id: Date.now() + Math.random(), ...notification };
+    setNotifications(prev => [...prev, n]);
+    setTimeout(() => dismissNotification(n.id), 10000);
+    return n;
+  }, [dismissNotification]);
+
   useEffect(() => {
     if (!user) return;
 
@@ -29,15 +36,7 @@ export function NotificationProvider({ children }) {
           if (location.pathname === '/buildings') return;
 
           const data = JSON.parse(event.data);
-          const notification = {
-            id: Date.now() + Math.random(),
-            ...data
-          };
-          setNotifications(prev => [...prev, notification]);
-
-          setTimeout(() => {
-            dismissNotification(notification.id);
-          }, 30000);
+          addNotification({ ...data });
         } catch (e) {
           console.error('Failed to parse notification:', e);
         }
@@ -59,10 +58,10 @@ export function NotificationProvider({ children }) {
       if (reconnectTimeout) clearTimeout(reconnectTimeout);
       if (eventSource) eventSource.close();
     };
-  }, [user, dismissNotification, location.pathname]);
+  }, [user, addNotification, location.pathname]);
 
   return (
-    <NotificationContext.Provider value={{ notifications, dismissNotification }}>
+    <NotificationContext.Provider value={{ notifications, addNotification, dismissNotification }}>
       {children}
     </NotificationContext.Provider>
   );

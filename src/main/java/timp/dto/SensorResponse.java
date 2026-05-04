@@ -16,7 +16,7 @@ public class SensorResponse {
     private final LocalDateTime lastSeen;
 
     public SensorResponse(Long id, Long buildingId, String buildingName, String name,
-                         SensorType type, boolean online, Double value, LocalDateTime lastSeen) {
+                          SensorType type, boolean online, Double value, LocalDateTime lastSeen) {
         this.id = id;
         this.buildingId = buildingId;
         this.buildingName = buildingName;

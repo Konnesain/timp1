@@ -2,11 +2,13 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { buildingApi } from '../api/buildingApi';
 import { roadApi } from '../api/roadApi';
+import { useNotification } from '../context/NotificationContext';
 
 const WORLD_SIZE = 3000;
 const ROAD_THICKNESS = 15;
 
 function BuildingMap() {
+  const { addNotification, dismissNotification } = useNotification();
   const [buildings, setBuildings] = useState([]);
   const [roads, setRoads] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,6 +26,7 @@ function BuildingMap() {
   const [roadStart, setRoadStart] = useState(null);
   const [roadPreviewEnd, setRoadPreviewEnd] = useState(null);
   const containerRef = useRef(null);
+  const arsonNotifications = useRef([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -381,6 +384,24 @@ function BuildingMap() {
             {roadMode ? 'Отмена дороги' : 'Добавить дорогу'}
           </button>
           <button onClick={() => loadData(false)} className="btn btn-primary">Обновить</button>
+          <button onClick={() => {
+            if (buildings.length === 0) return;
+            arsonNotifications.current.forEach(id => dismissNotification(id));
+            arsonNotifications.current = [];
+            const arsonRoll = Math.floor(Math.random() * 20) + 1;
+            const buildingRoll = Math.floor(Math.random() * buildings.length) + 1;
+            const target = buildings[buildingRoll - 1];
+            const arsonSuccess = arsonRoll <= 5;
+            const n1 = addNotification({ title: 'Кубик поджога', message: `Выпало: ${arsonRoll}/20 — ${arsonSuccess ? 'Успех' : 'Провал'}` });
+            const n2 = addNotification({ title: 'Кубик здания', message: `Выпало: ${buildingRoll} → ${target.name}` });
+            arsonNotifications.current = [n1.id, n2.id];
+            if (arsonSuccess) {
+              fetch(`/api/sensors/ignite/${target.id}`, { method: 'POST', credentials: 'include' });
+            }
+          }} className="btn btn-primary">Поджог</button>
+          <button onClick={() => buildings.forEach(b => {
+            fetch(`/api/sensors/extinguish/${b.id}`, { method: 'POST', credentials: 'include' });
+          })} className="btn btn-primary">Сброс</button>
         </div>
       </div>
 
