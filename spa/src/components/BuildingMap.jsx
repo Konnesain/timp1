@@ -411,6 +411,10 @@ function BuildingMap() {
             className={`btn ${roadMode ? 'btn-danger' : 'btn-primary'}`}>
             {roadMode ? 'Отмена дороги' : 'Добавить дорогу'}
           </button>
+          <button onClick={() => { setFireAccessMode(!fireAccessMode); setRoadMode(false); setRoadStart(null); setRoadPreviewEnd(null); }}
+            className={`btn ${fireAccessMode ? 'btn-danger' : 'btn-primary'}`}>
+            {fireAccessMode ? 'Отмена' : 'Добавить подъезд'}
+          </button>
           <button onClick={() => loadData(false)} className="btn btn-primary">Обновить</button>
           <button onClick={() => {
             if (buildings.length === 0) return;
@@ -430,10 +434,6 @@ function BuildingMap() {
           <button onClick={() => buildings.forEach(b => {
             fetch(`/api/sensors/extinguish/${b.id}`, { method: 'POST', credentials: 'include' });
           })} className="btn btn-primary">Сброс</button>
-          <button onClick={() => { setFireAccessMode(!fireAccessMode); setRoadMode(false); setRoadStart(null); setRoadPreviewEnd(null); }}
-            className={`btn ${fireAccessMode ? 'btn-danger' : 'btn-primary'}`}>
-            {fireAccessMode ? 'Отмена' : 'Добавить подъезд'}
-          </button>
         </div>
       </div>
 
