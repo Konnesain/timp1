@@ -15,8 +15,6 @@ function BuildingMap() {
   const [fireAccesses, setFireAccesses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filter, setFilter] = useState('all');
-  const [searchName, setSearchName] = useState('');
   const [hoveredBuilding, setHoveredBuilding] = useState(null);
   const [hoveredRoad, setHoveredRoad] = useState(null);
   const [hoveredFireAccess, setHoveredFireAccess] = useState(null);
@@ -378,20 +376,6 @@ function BuildingMap() {
     return '#607d8b';
   };
 
-  const isBuildingVisible = (building) => {
-    if (filter === 'all') return true;
-    if (filter === 'byName' && searchName) {
-      return building.name.toLowerCase().includes(searchName.toLowerCase());
-    }
-    if (filter === 'warning') {
-      return building.sensorStatus === 'WARNING' || building.sensorStatus === 'CRITICAL';
-    }
-    if (filter === 'critical') {
-      return building.sensorStatus === 'CRITICAL';
-    }
-    return true;
-  };
-
   const getStatusBadge = (status) => {
     if (status === 'OK') return 'В норме';
     if (status === 'WARNING') return 'Требует проверки';
@@ -422,21 +406,6 @@ function BuildingMap() {
       <div className="map-header">
         <h1>Интерактивная карта зданий</h1>
         <div className="map-controls">
-          <select value={filter} onChange={(e) => setFilter(e.target.value)}>
-            <option value="all">Все здания</option>
-            <option value="warning">Требуют проверки</option>
-            <option value="critical">Критические</option>
-            <option value="byName">По имени</option>
-          </select>
-          {filter === 'byName' && (
-            <input
-              type="text"
-              placeholder="Поиск по имени..."
-              value={searchName}
-              onChange={(e) => setSearchName(e.target.value)}
-              className="map-search"
-            />
-          )}
           <Link to="/buildings/add" className="btn btn-primary">Добавить здание</Link>
           <button onClick={() => { setRoadMode(!roadMode); setRoadStart(null); setRoadPreviewEnd(null); setFireAccessMode(false); }}
             className={`btn ${roadMode ? 'btn-danger' : 'btn-primary'}`}>
@@ -600,7 +569,6 @@ function BuildingMap() {
           )}
 
           {buildings.map((building) => {
-            if (!isBuildingVisible(building)) return null;
             const isHovered = hoveredBuilding && hoveredBuilding.id === building.id;
             const statusColor = getStatusColor(building);
             const strokeColor = getStrokeColor(building, isHovered);

@@ -58,7 +58,6 @@ public class FireAccessService {
         fa.setAngle(request.getAngle());
         FireAccess saved = fireAccessRepository.save(fa);
 
-        fireAccessBuildingRepository.deleteByFireAccessId(id);
         saveBuildingLinks(id, request.getBuildingIds());
 
         return toResponse(saved);
@@ -74,7 +73,28 @@ public class FireAccessService {
 
     private void saveBuildingLinks(Long fireAccessId, List<Long> buildingIds) {
         if (buildingIds == null || buildingIds.isEmpty()) return;
-        for (Long buildingId : buildingIds) {
+
+        List<FireAccessBuilding> currentLinks = fireAccessBuildingRepository.findByFireAccessId(fireAccessId);
+        List<Long> currentBuildingIds = currentLinks.stream()
+                .map(FireAccessBuilding::getBuildingId)
+                .collect(Collectors.toList());
+
+        List<Long> newBuildingIds = buildingIds;
+
+        List<Long> toRemove = currentBuildingIds.stream()
+                .filter(id -> !newBuildingIds.contains(id))
+                .toList();
+
+        List<Long> toAdd = newBuildingIds.stream()
+                .filter(id -> !currentBuildingIds.contains(id))
+                .toList();
+
+        for (Long buildingId : toRemove) {
+            fireAccessBuildingRepository.findOptByFireAccessIdAndBuildingId(fireAccessId, buildingId)
+                    .ifPresent(fireAccessBuildingRepository::delete);
+        }
+
+        for (Long buildingId : toAdd) {
             FireAccessBuilding link = new FireAccessBuilding(fireAccessId, buildingId);
             fireAccessBuildingRepository.save(link);
         }
