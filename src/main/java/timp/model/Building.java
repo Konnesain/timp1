@@ -7,6 +7,10 @@ import jakarta.validation.constraints.NotBlank;
 @Table(name = "buildings")
 public class Building {
 
+    public enum Status {
+        OK, WARNING, CRITICAL
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -30,6 +34,10 @@ public class Building {
     @Column(name = "description", length = 500)
     private String description;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private Status status = Status.OK;
+
     public Building() { }
 
     public Building(String name) { this.name = name; }
@@ -48,4 +56,6 @@ public class Building {
     public void setHeight(Integer height) { this.height = height; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+    public Status getStatus() { return status; }
+    public void setStatus(Status status) { this.status = status; }
 }

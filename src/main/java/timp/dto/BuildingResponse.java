@@ -1,5 +1,7 @@
 package timp.dto;
 
+import timp.model.Building;
+
 public class BuildingResponse {
 
     public enum SensorStatus {
@@ -12,6 +14,15 @@ public class BuildingResponse {
 
         SensorStatus(String label) { this.label = label; }
         public String getLabel() { return label; }
+
+        public static SensorStatus fromBuildingStatus(Building.Status status) {
+            if (status == null) return OK;
+            return switch (status) {
+                case OK -> OK;
+                case WARNING -> WARNING;
+                case CRITICAL -> CRITICAL;
+            };
+        }
     }
 
     private final Long id;

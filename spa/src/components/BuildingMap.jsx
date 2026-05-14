@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { buildingApi } from '../api/buildingApi';
 import { roadApi } from '../api/roadApi';
+import { fireAccessApi } from '../api/fireAccessApi';
 import { useNotification } from '../context/NotificationContext';
 
 const WORLD_SIZE = 3000;
@@ -11,12 +12,14 @@ function BuildingMap() {
   const { addNotification, dismissNotification } = useNotification();
   const [buildings, setBuildings] = useState([]);
   const [roads, setRoads] = useState([]);
+  const [fireAccesses, setFireAccesses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all');
   const [searchName, setSearchName] = useState('');
   const [hoveredBuilding, setHoveredBuilding] = useState(null);
   const [hoveredRoad, setHoveredRoad] = useState(null);
+  const [hoveredFireAccess, setHoveredFireAccess] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
   const [panning, setPanning] = useState(false);
   const [dragging, setDragging] = useState(null);
@@ -25,6 +28,7 @@ function BuildingMap() {
   const [roadMode, setRoadMode] = useState(false);
   const [roadStart, setRoadStart] = useState(null);
   const [roadPreviewEnd, setRoadPreviewEnd] = useState(null);
+  const [fireAccessMode, setFireAccessMode] = useState(false);
   const containerRef = useRef(null);
   const arsonNotifications = useRef([]);
   const navigate = useNavigate();
@@ -45,9 +49,10 @@ function BuildingMap() {
   const loadData = async (isInitial = false) => {
     try {
       if (isInitial) setLoading(true);
-      const [b, r] = await Promise.all([buildingApi.getAll(), roadApi.getAll()]);
+      const [b, r, fa] = await Promise.all([buildingApi.getAll(), roadApi.getAll(), fireAccessApi.getAll()]);
       setBuildings(b);
       setRoads(r);
+      setFireAccesses(fa);
       setError(null);
     } catch (err) {
       if (isInitial) setError(err.message);
@@ -69,11 +74,16 @@ function BuildingMap() {
   const handleDeleteItem = async () => {
     if (!contextMenu) return;
     const { item, type } = contextMenu;
-    if (!confirm(`Удалить ${type === 'road' ? 'дорогу' : 'здание'} "${item.name}"?`)) return;
+    const labels = { road: 'дорогу', building: 'здание', fireAccess: 'пожарный подъезд' };
+    const names = { road: item.name, building: item.name };
+    if (!confirm(`Удалить ${labels[type] || 'элемент'}${names[type] ? ` "${names[type]}"` : ''}?`)) return;
     try {
       if (type === 'road') {
         await roadApi.delete(item.id);
         setRoads(roads.filter(r => r.id !== item.id));
+      } else if (type === 'fireAccess') {
+        await fireAccessApi.delete(item.id);
+        setFireAccesses(fireAccesses.filter(f => f.id !== item.id));
       } else {
         await buildingApi.delete(item.id);
         setBuildings(buildings.filter(b => b.id !== item.id));
@@ -101,6 +111,23 @@ function BuildingMap() {
 
   const handleSvgMouseDown = (e) => {
     if (e.button !== 0) return;
+    if (fireAccessMode) {
+      const world = screenToWorld(e.clientX, e.clientY);
+      fireAccessApi.create({
+        positionX: Math.round(world.x - 20),
+        positionY: Math.round(world.y - 20),
+        width: 40,
+        height: 40,
+        angle: 0,
+        open: true,
+      }).then(res => {
+        setFireAccesses(prev => [...prev, res]);
+      }).catch(err => {
+        alert('Ошибка при создании: ' + err.message);
+      });
+      setFireAccessMode(false);
+      return;
+    }
     if (roadMode) {
       const world = screenToWorld(e.clientX, e.clientY);
       if (!roadStart) {
@@ -169,6 +196,7 @@ function BuildingMap() {
       startWorldX: world.x,
       startWorldY: world.y,
     });
+    e.stopPropagation();
   };
 
   const handleRoadMouseDown = (e, road) => {
@@ -181,6 +209,21 @@ function BuildingMap() {
       road,
       origX: road.positionX,
       origY: road.positionY,
+      startWorldX: world.x,
+      startWorldY: world.y,
+    });
+  };
+
+  const handleFireAccessMouseDown = (e, fa) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const world = screenToWorld(e.clientX, e.clientY);
+    setDragging({
+      type: 'fireAccess',
+      fireAccess: fa,
+      origX: fa.positionX,
+      origY: fa.positionY,
       startWorldX: world.x,
       startWorldY: world.y,
     });
@@ -208,7 +251,6 @@ function BuildingMap() {
     if (dragging) {
       const dx = world.x - dragging.startWorldX;
       const dy = world.y - dragging.startWorldY;
-      const updater = { ...dragging };
       if (dragging.type === 'building') {
         setBuildings(prev => prev.map(b =>
           b.id === dragging.building.id ? { ...b, positionX: Math.round(dragging.origX + dx), positionY: Math.round(dragging.origY + dy) } : b
@@ -216,6 +258,10 @@ function BuildingMap() {
       } else if (dragging.type === 'road') {
         setRoads(prev => prev.map(r =>
           r.id === dragging.road.id ? { ...r, positionX: Math.round(dragging.origX + dx), positionY: Math.round(dragging.origY + dy) } : r
+        ));
+      } else if (dragging.type === 'fireAccess') {
+        setFireAccesses(prev => prev.map(f =>
+          f.id === dragging.fireAccess.id ? { ...f, positionX: Math.round(dragging.origX + dx), positionY: Math.round(dragging.origY + dy) } : f
         ));
       }
     }
@@ -239,46 +285,57 @@ function BuildingMap() {
       if (dragging.type === 'building') {
         updated = buildings.find(b => b.id === dragging.building.id);
         api = buildingApi;
-      } else {
+      } else if (dragging.type === 'road') {
         updated = roads.find(r => r.id === dragging.road.id);
         api = roadApi;
+      } else if (dragging.type === 'fireAccess') {
+        updated = fireAccesses.find(f => f.id === dragging.fireAccess.id);
+        api = fireAccessApi;
       }
       if (updated) {
-        try {
-          await api.update(updated.id, {
-            name: updated.name,
-            description: updated.description || '',
-            positionX: updated.positionX,
-            positionY: updated.positionY,
-            width: updated.width,
-            height: updated.height,
-            angle: updated.angle ?? 0,
-          });
-        } catch (err) {
-          alert('Ошибка при сохранении: ' + err.message);
+        const dx = updated.positionX - dragging.origX;
+        const dy = updated.positionY - dragging.origY;
+        const moved = Math.abs(dx) > 5 || Math.abs(dy) > 5;
+        if (moved) {
+          try {
+            await api.update(updated.id, {
+              positionX: updated.positionX,
+              positionY: updated.positionY,
+              width: updated.width,
+              height: updated.height,
+              angle: updated.angle ?? 0,
+            });
+          } catch (err) {
+            alert('Ошибка при сохранении: ' + err.message);
+          }
         }
       }
     }
     if (resizing) {
       const updated = buildings.find(b => b.id === resizing.building.id);
       if (updated) {
-        try {
-          await buildingApi.update(updated.id, {
-            name: updated.name,
-            description: updated.description,
-            positionX: updated.positionX,
-            positionY: updated.positionY,
-            width: updated.width,
-            height: updated.height,
-          });
-        } catch (err) {
-          alert('Ошибка при сохранении: ' + err.message);
+        const dw = updated.width - resizing.origW;
+        const dh = updated.height - resizing.origH;
+        const resized = Math.abs(dw) > 5 || Math.abs(dh) > 5;
+        if (resized) {
+          try {
+            await buildingApi.update(updated.id, {
+              name: updated.name,
+              description: updated.description,
+              positionX: updated.positionX,
+              positionY: updated.positionY,
+              width: updated.width,
+              height: updated.height,
+            });
+          } catch (err) {
+            alert('Ошибка при сохранении: ' + err.message);
+          }
         }
       }
     }
     setDragging(null);
     setResizing(null);
-  }, [dragging, resizing, buildings, roads]);
+  }, [dragging, resizing, buildings, roads, fireAccesses]);
 
   useEffect(() => {
     if (dragging || resizing) {
@@ -379,7 +436,7 @@ function BuildingMap() {
             />
           )}
           <Link to="/buildings/add" className="btn btn-primary">Добавить здание</Link>
-          <button onClick={() => { setRoadMode(!roadMode); setRoadStart(null); setRoadPreviewEnd(null); }}
+          <button onClick={() => { setRoadMode(!roadMode); setRoadStart(null); setRoadPreviewEnd(null); setFireAccessMode(false); }}
             className={`btn ${roadMode ? 'btn-danger' : 'btn-primary'}`}>
             {roadMode ? 'Отмена дороги' : 'Добавить дорогу'}
           </button>
@@ -402,12 +459,21 @@ function BuildingMap() {
           <button onClick={() => buildings.forEach(b => {
             fetch(`/api/sensors/extinguish/${b.id}`, { method: 'POST', credentials: 'include' });
           })} className="btn btn-primary">Сброс</button>
+          <button onClick={() => { setFireAccessMode(!fireAccessMode); setRoadMode(false); setRoadStart(null); setRoadPreviewEnd(null); }}
+            className={`btn ${fireAccessMode ? 'btn-danger' : 'btn-primary'}`}>
+            {fireAccessMode ? 'Отмена' : 'Добавить подъезд'}
+          </button>
         </div>
       </div>
 
       {roadMode && (
         <div className="road-mode-hint">
           {roadStart ? 'Кликните для завершения дороги' : 'Кликните на карту для начала дороги'}
+        </div>
+      )}
+      {fireAccessMode && (
+        <div className="road-mode-hint">
+          Кликните на карту для размещения подъезда
         </div>
       )}
 
@@ -424,7 +490,7 @@ function BuildingMap() {
           onMouseDown={handleSvgMouseDown}
           onMouseMove={(e) => { if (roadMode && roadStart) handleSvgMouseMove(e); else if (panning) handleSvgMouseMove(e); }}
           onMouseUp={() => { if (panning) handleSvgMouseUp(); }}
-          style={{ cursor: dragging ? 'move' : (panning ? 'grabbing' : (roadMode ? 'crosshair' : 'grab')) }}
+          style={{ cursor: dragging ? 'move' : (panning ? 'grabbing' : (roadMode || fireAccessMode ? 'crosshair' : 'grab')) }}
         >
           <defs>
             <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -469,6 +535,50 @@ function BuildingMap() {
                   transform={`rotate(${road.angle || 0}, ${cx}, ${cy})`}
                 >
                   {road.name}
+                </text>
+              </g>
+            );
+          })}
+
+          {fireAccesses.map((fa) => {
+            const isHovered = hoveredFireAccess && hoveredFireAccess.id === fa.id;
+            const color = fa.open ? '#4caf50' : '#f44336';
+            const stroke = isHovered ? '#3f51b5' : (fa.open ? '#2e7d32' : '#c62828');
+            const cx = fa.positionX + fa.width / 2;
+            const cy = fa.positionY + fa.height / 2;
+            return (
+              <g
+                key={fa.id}
+                className={`map-fire-access ${isHovered ? 'hovered' : ''}`}
+                onClick={(e) => e.stopPropagation()}
+                onMouseEnter={() => setHoveredFireAccess(fa)}
+                onMouseLeave={() => setHoveredFireAccess(null)}
+                onContextMenu={(e) => handleContextMenu(e, fa, 'fireAccess')}
+                style={{ cursor: 'move' }}
+                onMouseDown={(e) => handleFireAccessMouseDown(e, fa)}
+              >
+                <rect
+                  x={fa.positionX}
+                  y={fa.positionY}
+                  width={fa.width}
+                  height={fa.height}
+                  fill={color}
+                  stroke={stroke}
+                  strokeWidth={isHovered ? 3 : 2}
+                  rx="4"
+                  transform={`rotate(${fa.angle || 0}, ${cx}, ${cy})`}
+                />
+                <text
+                  x={cx}
+                  y={cy + 6}
+                  textAnchor="middle"
+                  fill="white"
+                  fontSize="16"
+                  fontWeight="bold"
+                  pointerEvents="none"
+                  transform={`rotate(${fa.angle || 0}, ${cx}, ${cy})`}
+                >
+                  {fa.open ? '⬆' : '✕'}
                 </text>
               </g>
             );
@@ -582,20 +692,25 @@ function BuildingMap() {
           })}
         </svg>
 
-        {(hoveredBuilding || hoveredRoad) && (
+        {(hoveredBuilding || hoveredRoad || hoveredFireAccess) && (
           <div
             className="map-tooltip"
             style={{
-              left: (hoveredBuilding?.positionX ?? hoveredRoad?.positionX ?? 0) + (hoveredBuilding?.width ?? hoveredRoad?.width ?? 0) / 2,
-              top: (hoveredBuilding?.positionY ?? hoveredRoad?.positionY ?? 0) - 10,
+              left: (hoveredBuilding?.positionX ?? hoveredRoad?.positionX ?? hoveredFireAccess?.positionX ?? 0) + (hoveredBuilding?.width ?? hoveredRoad?.width ?? hoveredFireAccess?.width ?? 0) / 2,
+              top: (hoveredBuilding?.positionY ?? hoveredRoad?.positionY ?? hoveredFireAccess?.positionY ?? 0) - 10,
             }}
           >
-            <strong>{hoveredBuilding?.name || hoveredRoad?.name}</strong>
+            {hoveredBuilding?.name && <strong>{hoveredBuilding.name}</strong>}
+            {hoveredRoad?.name && <strong>{hoveredRoad.name}</strong>}
+            {hoveredFireAccess && <strong>Пожарный подъезд</strong>}
             {(hoveredBuilding?.description || hoveredRoad?.description) && (
               <div className="tooltip-desc">{hoveredBuilding?.description || hoveredRoad?.description}</div>
             )}
             {hoveredBuilding && (
               <div className="tooltip-status">Статус: {getStatusBadge(hoveredBuilding.sensorStatus)}</div>
+            )}
+            {hoveredFireAccess && (
+              <div className="tooltip-status">Статус: {hoveredFireAccess.open ? 'Открыт' : 'Закрыт'}</div>
             )}
             <div className="tooltip-hint">Нажмите для просмотра</div>
           </div>
@@ -612,6 +727,8 @@ function BuildingMap() {
           <button className="context-menu-item" onClick={() => {
             if (contextMenu.type === 'road') {
               navigate(`/roads/${contextMenu.item.id}/edit`);
+            } else if (contextMenu.type === 'fireAccess') {
+              navigate(`/fire-access/${contextMenu.item.id}/edit`);
             } else {
               navigate(`/buildings/${contextMenu.item.id}/edit`);
             }
@@ -645,6 +762,10 @@ function BuildingMap() {
         <div className="legend-item">
           <span className="legend-color" style={{ background: '#999' }}></span>
           <span>Дорога</span>
+        </div>
+        <div className="legend-item">
+          <span className="legend-color" style={{ background: '#f44336' }}></span>
+          <span>Подъезд</span>
         </div>
       </div>
     </div>

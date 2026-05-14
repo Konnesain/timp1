@@ -1,10 +1,6 @@
 package timp.service;
 
 import timp.dto.NotificationDto;
-import timp.model.User;
-import timp.repository.UserRepository;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -16,14 +12,12 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class NotificationService {
 
-    private final JavaMailSender mailSender;
-    private final UserRepository userRepository;
+    private final EmailNotificationService emailNotificationService;
     private final Set<SseEmitter> emitters = ConcurrentHashMap.newKeySet();
     private final Set<Long> alertedBuildings = ConcurrentHashMap.newKeySet();
 
-    public NotificationService(JavaMailSender mailSender, UserRepository userRepository) {
-        this.mailSender = mailSender;
-        this.userRepository = userRepository;
+    public NotificationService(EmailNotificationService emailNotificationService) {
+        this.emailNotificationService = emailNotificationService;
     }
 
     public SseEmitter createEmitter() {
@@ -41,7 +35,7 @@ public class NotificationService {
         if(shouldSendAlert(buildingId))
         {
             sendSseAlert(buildingId, buildingName, sensorInfo);
-            sendEmailAlert(buildingId, buildingName, sensorInfo);
+            emailNotificationService.sendEmailAlert(buildingId, buildingName, sensorInfo);
         }
     }
 
@@ -74,28 +68,7 @@ public class NotificationService {
         emitters.removeAll(dead);
     }
 
-    private void sendEmailAlert(Long buildingId, String buildingName, String sensorInfo) {
-        List<String> emails = userRepository.findAll().stream()
-                .map(User::getEmail)
-                .filter(email -> email != null && !email.isBlank())
-                .toList();
-
-        if (emails.isEmpty()) return;
-
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(emails.toArray(new String[0]));
-            message.setSubject("Пожарная тревога в " + buildingName);
-            message.setText("Обнаружена критическая температура!\nЗдание: " + buildingName + "\nSensor Info: " + sensorInfo);
-            mailSender.send(message);
-        } catch (Exception e) {
-            System.err.println("Failed to send email notification: " + e.getMessage());
-        }
-    }
-
-    public void resetAlertIfResolved(Long buildingId, boolean isCritical) {
-        if (!isCritical) {
-            alertedBuildings.remove(buildingId);
-        }
+    public void resetAlert(Long buildingId) {
+        alertedBuildings.remove(buildingId);
     }
 }

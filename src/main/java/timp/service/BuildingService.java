@@ -7,7 +7,6 @@ import timp.dto.EmployeeInfo;
 import timp.model.Building;
 import timp.model.Employee;
 import timp.model.EmployeeBuildingAccess;
-import timp.model.Sensor;
 import timp.repository.BuildingRepository;
 import timp.repository.EmployeeBuildingAccessRepository;
 import timp.repository.EmployeeRepository;
@@ -28,20 +27,17 @@ public class BuildingService {
     private final EmployeeRepository employeeRepository;
     private final EmployeeBuildingAccessRepository accessRepository;
     private final SensorRepository sensorRepository;
-    private final SensorService sensorService;
     private final SecurityEventLogger eventLogger;
 
     public BuildingService(BuildingRepository buildingRepository,
                            EmployeeRepository employeeRepository,
                            EmployeeBuildingAccessRepository accessRepository,
                            SensorRepository sensorRepository,
-                           SensorService sensorService,
                            SecurityEventLogger eventLogger) {
         this.buildingRepository = buildingRepository;
         this.employeeRepository = employeeRepository;
         this.accessRepository = accessRepository;
         this.sensorRepository = sensorRepository;
-        this.sensorService = sensorService;
         this.eventLogger = eventLogger;
     }
 
@@ -123,8 +119,7 @@ public class BuildingService {
     }
 
     private BuildingResponse toResponse(Building building) {
-        List<Sensor> sensors = sensorRepository.findByBuildingId(building.getId());
-        BuildingResponse.SensorStatus status = calculateSensorStatus(sensors);
+        BuildingResponse.SensorStatus status = BuildingResponse.SensorStatus.fromBuildingStatus(building.getStatus());
 
         return new BuildingResponse(
                 building.getId(),
@@ -138,20 +133,10 @@ public class BuildingService {
         );
     }
 
-    private BuildingResponse.SensorStatus calculateSensorStatus(List<Sensor> sensors) {
-        if (sensors.isEmpty()) {
-            return BuildingResponse.SensorStatus.NO_SENSORS;
-        }
-
-        if (sensorService.hasCriticalSensors(sensors)) {
-            return BuildingResponse.SensorStatus.CRITICAL;
-        }
-
-        boolean hasOffline = sensors.stream().anyMatch(s -> !s.isOnline());
-        if (hasOffline) {
-            return BuildingResponse.SensorStatus.WARNING;
-        }
-
-        return BuildingResponse.SensorStatus.OK;
+    public void updateStatus(Long buildingId, Building.Status status) {
+        Building building = buildingRepository.findById(buildingId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Здание не найдено: " + buildingId));
+        building.setStatus(status);
+        buildingRepository.save(building);
     }
 }
