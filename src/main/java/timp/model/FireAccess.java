@@ -16,9 +16,9 @@ public class FireAccess {
     @Column(name = "position_y")
     private Integer positionY = 0;
 
-    private Integer width = 40;
+    private Integer width = 30;
 
-    private Integer height = 40;
+    private Integer height = 30;
 
     private Double angle = 0.0;
 

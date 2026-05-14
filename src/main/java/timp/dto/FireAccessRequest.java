@@ -7,8 +7,8 @@ public class FireAccessRequest {
 
     private Integer positionX = 0;
     private Integer positionY = 0;
-    private Integer width = 40;
-    private Integer height = 40;
+    private Integer width = 30;
+    private Integer height = 30;
     private Double angle = 0.0;
     private Boolean open = true;
     private List<Long> buildingIds = new ArrayList<>();

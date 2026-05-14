@@ -11,8 +11,8 @@ function FireAccessForm() {
   const [formData, setFormData] = useState({
     positionX: 0,
     positionY: 0,
-    width: 40,
-    height: 40,
+    width: 30,
+    height: 30,
     angle: 0,
     buildingIds: []
   });
@@ -138,7 +138,7 @@ function FireAccessForm() {
                 value={formData.width}
                 onChange={handleChange}
                 min="10"
-                placeholder="40"
+                placeholder="30"
               />
             </div>
             <div className="form-group">
@@ -150,7 +150,7 @@ function FireAccessForm() {
                 value={formData.height}
                 onChange={handleChange}
                 min="10"
-                placeholder="40"
+                placeholder="30"
               />
             </div>
           </div>

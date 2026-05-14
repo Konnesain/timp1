@@ -114,10 +114,10 @@ function BuildingMap() {
     if (fireAccessMode) {
       const world = screenToWorld(e.clientX, e.clientY);
       fireAccessApi.create({
-        positionX: Math.round(world.x - 20),
-        positionY: Math.round(world.y - 20),
-        width: 40,
-        height: 40,
+        positionX: Math.round(world.x - 15),
+        positionY: Math.round(world.y - 15),
+        width: 30,
+        height: 30,
         angle: 0,
         open: true,
       }).then(res => {
@@ -299,6 +299,8 @@ function BuildingMap() {
         if (moved) {
           try {
             await api.update(updated.id, {
+              name: updated.name,
+              description: updated.description || '',
               positionX: updated.positionX,
               positionY: updated.positionY,
               width: updated.width,
@@ -321,7 +323,7 @@ function BuildingMap() {
           try {
             await buildingApi.update(updated.id, {
               name: updated.name,
-              description: updated.description,
+              description: updated.description || '',
               positionX: updated.positionX,
               positionY: updated.positionY,
               width: updated.width,
